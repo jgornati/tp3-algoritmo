@@ -8,23 +8,23 @@ type gimnasioRecord = record
 	valorPersonalTrainer: real;
 	end;
 
-type actividades = record
+type actividadesRecord = record
 	codigoActividad: integer;
 	dscActividad: string[30];
 	end;
 
-type diasYhorarios = record
+type diasYhorariosRecord = record
 	dia: integer;
 	hora: string[5];
 	codigoActividad: integer;
 	end;
 
-type ejerciciosXrutinas = record
+type ejerciciosXrutinasRecord = record
 	codigoEjercicio: integer;
 	dscRutina: string[30];
 	end;
 
-type clientes = record
+type clientesRecord = record
 	dni: string[8];
 	nYa: string[30];
 	rutina: char;
@@ -33,7 +33,7 @@ type clientes = record
 	pagoYpeso: array [1..2, 1..2] of real;
 	end;
 
-type rutinasXclientes = record
+type rutinasXclientesRecord = record
 	dni: string[8];
 	mes: integer;
 	anio: integer;
@@ -48,7 +48,8 @@ var
 	salir: boolean;
 	gimnasio: gimnasioRecord;
 	archivoGimnasio: file of gimnasioRecord;
-
+	actividad: actividadesRecord;
+	archivoActividades: file of actividadesRecord;
 
 
 
@@ -64,8 +65,7 @@ end;
 
 // INICIO ABMs
 procedure abmGimnasio(opMenu:char);
-var 
-	ba: char;
+	var ba:char;
 begin
 
 	// Comprobacion si existe archivo
@@ -77,54 +77,113 @@ begin
 
 	if opMenu = '1' then begin
 		// seek(archivoGimnasio, filesize(archivoGimnasio));
-		repeat
-			write('Ingrese nombre del gimnasio: ');
-			readln(gimnasio.nombre);
-			write('Ingrese direccion del gimnasio: ');
-			readln(gimnasio.direccion);
-			write('Ingrese valor de cuota: ');
-			readln(gimnasio.valorCuota);
-			write('Ingrese valor de nutricionista: ');
-			readln(gimnasio.valorNutricionista);
-			write('Ingrese valor de personal trainer: ');
-			readln(gimnasio.valorPersonalTrainer);
-			write(archivoGimnasio, gimnasio);
-			Write('Ingresa datos de otro gimnasio? ( s=SI n=NO)');
-			repeat
-				readln(ba)
-			until (ba = 's') or (ba = 'n');
-		until (ba='n') ;
+		writeln('Alta de gimnasio, sobreescribe el gimnasio actual');
+		write('Ingrese nombre del gimnasio: ');
+		readln(gimnasio.nombre);
+		write('Ingrese direccion del gimnasio: ');
+		readln(gimnasio.direccion);
+		write('Ingrese valor de cuota: ');
+		readln(gimnasio.valorCuota);
+		write('Ingrese valor de nutricionista: ');
+		readln(gimnasio.valorNutricionista);
+		write('Ingrese valor de personal trainer: ');
+		readln(gimnasio.valorPersonalTrainer);
+		write(archivoGimnasio, gimnasio);
 		close(archivoGimnasio);
 	end;
 
 	if opMenu = '2' then begin
-		Writeln('listado de gimnasios');
+		if filesize(archivoGimnasio) = 0 then begin
+			writeln('No hay ningun dato para modificar, presione enter para continuar');
+			readln;
+		end
+		else
+		begin
+			writeln('Modificacion de gimnasio');
+			write(archivoGimnasio, gimnasio);
+			writeln('Ingrese nuevo valor cuota[',gimnasio.valorCuota,']: ');
+			readln(gimnasio.valorCuota);
+			writeln('Ingrese nuevo valor nutricionista[',gimnasio.valorNutricionista,']: ');
+			readln(gimnasio.valorNutricionista);
+			writeln('Ingrese nuevo valor personal trainer[',gimnasio.valorPersonalTrainer,']: ');
+			readln(gimnasio.valorPersonalTrainer);
+			reset(archivoGimnasio);
+			write(archivoGimnasio, gimnasio);
+		end;
+	end;
+
+	if opMenu = '3' then begin
+		writeln('Desea borrar el gimnasio S/N?');
+		repeat
+			read (ba)
+		until (ba = 'S') or (ba = 'N') or (ba = 's') or (ba = 'n');
+		if (ba = 'S') or (ba = 's') then
+			rewrite(archivoGimnasio);
+	end;	
+
+	if opMenu = '4' then begin
+		writeln('Listado de gimnasio');
 		while not EOF(archivoGimnasio) do
 		begin
-			Read(archivoGimnasio, gimnasio);
+			read(archivoGimnasio, gimnasio);
 			writeln(gimnasio.nombre);
+			writeln(gimnasio.direccion);
+			writeln(gimnasio.valorCuota);
+			writeln(gimnasio.valorNutricionista);
+			writeln(gimnasio.valorPersonalTrainer);
 		end;
+	readln;
+	end;
+
+end;
+
+
+procedure abmActividades(opMenu:char);
+var pos: integer;
+	ba: char;
+begin
+		// Comprobacion si existe archivo
+	assign(archivoActividades, './datos/archivoActividades.dat');
+	{$I-}
+	reset(archivoActividades);
+	If ioresult = 2 then rewrite(archivoActividades);
+	{$I+}
+
+	if opMenu = '1' then begin
+		seek(archivoActividades, filesize(archivoActividades));
+		writeln('Alta de actividad');
+		pos := filepos(archivoActividades);
+		actividad.codigoActividad := pos + 1;
+		write('Ingrese descripcion de actividad ',actividad.codigoActividad,' : ');
+		readln(actividad.dscActividad);
+		write(archivoActividades, actividad);
+		close(archivoActividades);
+	end;
+
+	if opMenu = '4' then begin
+		writeln('Listado de actividades');
+		while not EOF(archivoActividades) do
+		begin
+			read(archivoActividades, actividad);
+			writeln(actividad.codigoActividad);
+			writeln(actividad.dscActividad);
+		end;
+	writeln('Presione cualquier tecla para continuar');
 	readln;
 	end;
 end;
 
-
-procedure abmActividades();
-begin
-	readln;
-end;
-
-procedure abmDiasYhorarios();
+procedure abmDiasYhorarios(opMenu:char);
 	begin
 	readln;
 	end;
 
-procedure abmEjerciciosXrutinas();
+procedure abmEjerciciosXrutinas(opMenu:char);
 begin
 	readln;
 end;
 // FIN ABMs
-procedure abmGimnasioMenu();
+procedure opcionesABMmenu(nomArchivo:string);
 var
 	opMenu:char;
 begin
@@ -133,12 +192,18 @@ begin
 		writeln('1) Alta');
 		writeln('2) Modifacion');
 		writeln('3) Baja');
+		writeln('4) Listado');
 		opMenu := readkey;
-	until (opMenu >= '1') and (opMenu <= '3');
-	abmGimnasio(opMenu);
+	until (opMenu >= '1') and (opMenu <= '4');
+	case nomArchivo of
+		'gym': abmGimnasio(opMenu);
+		'act': abmActividades(opMenu);
+		'dyg': abmDiasYhorarios(opMenu);
+		'eje': abmEjerciciosXrutinas(opMenu);
+	end;
 end;
 
-procedure menuABM();
+procedure menuABMs();
 var opMenu: char;
 begin
 	repeat
@@ -154,10 +219,10 @@ begin
 	clrscr;
 	// SECCIONES
 	case opMenu of
-		'1': abmGimnasioMenu();
-		'2': abmActividades();
-		'3': abmDiasYhorarios();
-		'4': abmEjerciciosXrutinas();
+		'1': opcionesABMmenu('gym');
+		'2': opcionesABMmenu('act');
+		'3': opcionesABMmenu('dyh');
+		'4': opcionesABMmenu('eje');
 		'5': clrscr;
 	end;
 end;
@@ -197,7 +262,7 @@ repeat
 	bienvenido();
     menuSel := menu();
 	case menuSel of
-		'1': menuABM();
+		'1': menuABMs();
 		'2': seccionClientes();
 		'3': seccionRutinasPorClientes();
 		'7': salir:=true;
